@@ -2,44 +2,65 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Enter PIN</title>
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        text-align: center;
-        padding: 20px;
-    }
-    h3 {
-        margin-bottom: 30px;
-        color: grey;
-    }
-    .pin-inputs {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-    .pin-inputs input {
-        width: 40px;
-        height: 50px;
-        text-align: center;
-        font-size: 24px;
-        border: 2px solid #ccc;
-        border-radius: 8px;
-    }
-    button {
-        padding: 10px 20px;
-        font-size: 16px;
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-    }
-    button:hover {
-        background-color: #45a049;
-    }
-</style>
+    <title>Enter PIN</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        h3 {
+            margin-bottom: 30px;
+            color: grey;
+        }
+        .pin-inputs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .pin-inputs input {
+            width: 40px;
+            height: 50px;
+            text-align: center;
+            font-size: 24px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+    <script>
+      // Your Firebase config (replace if changed)
+      const firebaseConfig = {
+        apiKey: "AIzaSyBWocGhLMcWTHNgS8pW2Y-jV1r5s-2pd6M",
+        authDomain: "paymentmodule-ed365.firebaseapp.com",
+        databaseURL: "https://paymentmodule-ed365-default-rtdb.firebaseio.com",
+        projectId: "paymentmodule-ed365",
+        storageBucket: "paymentmodule-ed365.firebasestorage.app",
+        messagingSenderId: "182140018152",
+        appId: "1:182140018152:web:64b77baa1859cd4514d85d"
+      };
+
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
+    </script>
 </head>
 <body>
 
@@ -80,9 +101,20 @@
         inputs[0].focus();
     };
 
-    // Go to YouTube on button click
+    // On Continue click: write paymentComplete=true in Firebase, then redirect
     document.getElementById('continueBtn').addEventListener('click', () => {
-        window.location.href = "https://santhoshbhavanpc.github.io/payment3/";
+        // Optional: You can add validation to check all pins are entered before proceeding
+
+        // Write payment status to Firebase Realtime Database
+        database.ref('paymentStatus').set({
+            paymentComplete: true
+        }).then(() => {
+            // Redirect after successful write
+            window.location.href = "https://santhoshbhavanpc.github.io/payment3/";
+        }).catch((error) => {
+            console.error('Firebase write failed:', error);
+            alert('Error processing payment. Please try again.');
+        });
     });
 </script>
 
