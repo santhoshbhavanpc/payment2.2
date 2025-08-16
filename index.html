@@ -46,8 +46,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
     <script>
-      // ========= 3rd Firebase for history & payment =========
-      const firebaseConfigHistory = {
+      // 3rd Firebase config
+      const firebaseConfig = {
         apiKey: "AIzaSyBpRla6iYXgZuxyCHvtQ8bIcwKf5i3ga1U",
         authDomain: "history-storing.firebaseapp.com",
         databaseURL: "https://history-storing-default-rtdb.firebaseio.com",
@@ -58,10 +58,10 @@
       };
 
       // Initialize Firebase
-      const appHistory = firebase.initializeApp(firebaseConfigHistory, "historyAppPIN");
-      const dbHistory = firebase.database(appHistory);
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
 
-      // Get recordId from URL (?id=xxxx)
+      // Get recordId from URL (?id=...)
       const urlParams = new URLSearchParams(window.location.search);
       const recordId = urlParams.get("id");
     </script>
@@ -105,17 +105,18 @@
         inputs[0].focus();
     };
 
-    // On Continue click: set paymentComplete=true for this user
+    // On Continue click: mark paymentComplete=true in 3rd DB
     document.getElementById('continueBtn').addEventListener('click', () => {
         if (!recordId) {
             alert("No payment record found.");
             return;
         }
 
-        dbHistory.ref("vehicleLogs/" + recordId).update({
+        db.ref("vehicleLogs/" + recordId).update({
             paymentComplete: true
         }).then(() => {
-            alert("Payment Successful!");
+            // Redirect after marking complete
+            window.location.href = "https://santhoshbhavanpc.github.io/payment3/";
         }).catch((error) => {
             console.error('Firebase write failed:', error);
             alert('Error processing payment. Please try again.');
