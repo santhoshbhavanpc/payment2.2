@@ -46,20 +46,24 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
     <script>
-      // Your Firebase config (replace if changed)
-      const firebaseConfig = {
-        apiKey: "AIzaSyBWocGhLMcWTHNgS8pW2Y-jV1r5s-2pd6M",
-        authDomain: "paymentmodule-ed365.firebaseapp.com",
-        databaseURL: "https://paymentmodule-ed365-default-rtdb.firebaseio.com",
-        projectId: "paymentmodule-ed365",
-        storageBucket: "paymentmodule-ed365.firebasestorage.app",
-        messagingSenderId: "182140018152",
-        appId: "1:182140018152:web:64b77baa1859cd4514d85d"
+      // ========= 3rd Firebase for history & payment =========
+      const firebaseConfigHistory = {
+        apiKey: "AIzaSyBpRla6iYXgZuxyCHvtQ8bIcwKf5i3ga1U",
+        authDomain: "history-storing.firebaseapp.com",
+        databaseURL: "https://history-storing-default-rtdb.firebaseio.com",
+        projectId: "history-storing",
+        storageBucket: "history-storing.firebasestorage.app",
+        messagingSenderId: "30155724407",
+        appId: "1:30155724407:web:0162dd94f5492441ae9872"
       };
 
       // Initialize Firebase
-      firebase.initializeApp(firebaseConfig);
-      const database = firebase.database();
+      const appHistory = firebase.initializeApp(firebaseConfigHistory, "historyAppPIN");
+      const dbHistory = firebase.database(appHistory);
+
+      // Get recordId from URL (?id=xxxx)
+      const urlParams = new URLSearchParams(window.location.search);
+      const recordId = urlParams.get("id");
     </script>
 </head>
 <body>
@@ -101,16 +105,17 @@
         inputs[0].focus();
     };
 
-    // On Continue click: write paymentComplete=true in Firebase, then redirect
+    // On Continue click: set paymentComplete=true for this user
     document.getElementById('continueBtn').addEventListener('click', () => {
-        // Optional: You can add validation to check all pins are entered before proceeding
+        if (!recordId) {
+            alert("No payment record found.");
+            return;
+        }
 
-        // Write payment status to Firebase Realtime Database
-        database.ref('paymentStatus').set({
+        dbHistory.ref("vehicleLogs/" + recordId).update({
             paymentComplete: true
         }).then(() => {
-            // Redirect after successful write
-            window.location.href = "https://santhoshbhavanpc.github.io/payment3/";
+            alert("Payment Successful!");
         }).catch((error) => {
             console.error('Firebase write failed:', error);
             alert('Error processing payment. Please try again.');
