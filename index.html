@@ -1,113 +1,136 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fun Mall Parking Payment</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: black;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-    }
-    h2 {
-      margin-bottom: 20px;
-    }
-    .pin-input {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-    .pin-input input {
-      width: 40px;
-      height: 40px;
-      text-align: center;
-      font-size: 20px;
-      margin: 5px;
-      border-radius: 8px;
-      border: none;
-    }
-    button {
-      background-color: green;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-  </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enter PIN</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        h3 {
+            margin-bottom: 30px;
+            color: grey;
+        }
+        .pin-inputs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .pin-inputs input {
+            width: 40px;
+            height: 50px;
+            text-align: center;
+            font-size: 24px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+    
+    <!-- Firebase SDK (modular v9) -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+      import { getDatabase, ref, query, limitToLast, get, update } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+      // ✅ Your Firebase config (3rd DB: history-storing)
+      const firebaseConfig = {
+        apiKey: "AIzaSyBpRla6iYXgZuxyCHvtQ8bIcwKf5i3ga1U",
+        authDomain: "history-storing.firebaseapp.com",
+        databaseURL: "https://history-storing-default-rtdb.firebaseio.com",
+        projectId: "history-storing",
+        storageBucket: "history-storing.firebasestorage.app",
+        messagingSenderId: "30155724407",
+        appId: "1:30155724407:web:0162dd94f5492441ae9872"
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+
+      window.onload = () => {
+          document.querySelectorAll('.pin-inputs input')[0].focus();
+      };
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const inputs = document.querySelectorAll('.pin-inputs input');
+
+        // Auto move focus
+        inputs.forEach((input, index) => {
+          input.addEventListener('input', () => {
+            if (input.value && index < inputs.length - 1) {
+              inputs[index + 1].focus();
+            }
+          });
+
+          input.addEventListener('keydown', (e) => {
+            if (e.key === "Backspace" && !input.value && index > 0) {
+              inputs[index - 1].focus();
+            }
+          });
+        });
+
+        document.getElementById('continueBtn').addEventListener('click', async () => {
+          try {
+            const vehicleLogsRef = ref(db, "vehicleLogs");
+            const lastRecordQuery = query(vehicleLogsRef, limitToLast(1));
+            const snapshot = await get(lastRecordQuery);
+
+            if (snapshot.exists()) {
+              snapshot.forEach(child => {
+                const recordKey = child.key;
+
+                // ✅ Update paymentComplete = true
+                update(ref(db, "vehicleLogs/" + recordKey), {
+                  paymentComplete: true
+                }).then(() => {
+                  console.log("Payment updated ✅");
+                  // ✅ Redirect to GitHub Pages
+                  window.location.href = "https://santhoshbhavanpc.github.io/payment3/";
+                }).catch(err => {
+                  console.error("Update failed:", err);
+                  alert("Update failed!");
+                });
+              });
+            } else {
+              alert("No record found!");
+            }
+          } catch (error) {
+            console.error("Error updating payment:", error);
+            alert("Payment update failed!");
+          }
+        });
+      });
+    </script>
 </head>
 <body>
-  <h2>Sending to:<br> Fun Mall Parking System</h2>
-  <p>Enter the 6-digit UPI PIN</p>
 
-  <div class="pin-input">
-    <input maxlength="1" type="password">
-    <input maxlength="1" type="password">
-    <input maxlength="1" type="password">
-    <input maxlength="1" type="password">
-    <input maxlength="1" type="password">
-    <input maxlength="1" type="password">
-  </div>
+<h3>Sending to: <br>Fun Mall Parking System</h3>
+<p style="text-align:center; font-weight:bold; font-size:18px;">Enter the 6-digit UPI PIN</p>
 
-  <button id="continueBtn">Continue</button>
+<div class="pin-inputs">
+    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="pin1">
+    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="pin2">
+    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="pin3">
+    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="pin4">
+    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="pin5">
+    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="pin6">
+</div>
 
-  <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getDatabase, ref, query, limitToLast, get, update } 
-      from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+<button id="continueBtn">Continue</button>
 
-    // ====== Your Firebase Config (3rd DB) ======
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT.firebaseapp.com",
-      databaseURL: "https://YOUR_PROJECT.firebaseio.com",
-      projectId: "YOUR_PROJECT",
-      storageBucket: "YOUR_PROJECT.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
-
-    // Init Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    // Continue button click
-    document.getElementById("continueBtn").addEventListener("click", async () => {
-      const vehicleLogsRef = ref(db, "vehicleLogs");
-
-      try {
-        // Always fetch the latest record
-        const lastRecordQuery = query(vehicleLogsRef, limitToLast(1));
-        const snapshot = await get(lastRecordQuery);
-
-        if (snapshot.exists()) {
-          snapshot.forEach(child => {
-            const recordKey = child.key;
-
-            // ✅ Update paymentComplete to true
-            update(ref(db, "vehicleLogs/" + recordKey), {
-              paymentComplete: true
-            });
-
-            // ✅ Redirect to success page
-            window.location.href = "https://santhoshbhavanpc.github.io/payment3/";
-          });
-        } else {
-          alert("No payment record found.");
-        }
-      } catch (error) {
-        console.error("Error updating payment:", error);
-        alert("Payment update failed!");
-      }
-    });
-  </script>
 </body>
 </html>
