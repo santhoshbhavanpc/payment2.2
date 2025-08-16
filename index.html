@@ -46,8 +46,8 @@
       import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
       import { getDatabase, ref, query, limitToLast, get, update } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
-      // ✅ Your Firebase config (3rd DB: history-storing)
-      const firebaseConfig = {
+      // ✅ History DB (3rd DB)
+      const firebaseConfig3 = {
         apiKey: "AIzaSyBpRla6iYXgZuxyCHvtQ8bIcwKf5i3ga1U",
         authDomain: "history-storing.firebaseapp.com",
         databaseURL: "https://history-storing-default-rtdb.firebaseio.com",
@@ -57,9 +57,23 @@
         appId: "1:30155724407:web:0162dd94f5492441ae9872"
       };
 
-      // Initialize Firebase
-      const app = initializeApp(firebaseConfig);
-      const db = getDatabase(app);
+      // ✅ Entry Gate DB
+      const firebaseConfig2 = {
+        apiKey: "AIzaSyC_IRxRbP3WQDVrnD0A_0V84_LBBM4sK6A",
+        authDomain: "entry-gate-ddc57.firebaseapp.com",
+        databaseURL: "https://entry-gate-ddc57-default-rtdb.firebaseio.com",
+        projectId: "entry-gate-ddc57",
+        storageBucket: "entry-gate-ddc57.firebasestorage.app",
+        messagingSenderId: "74978983395",
+        appId: "1:74978983395:web:b9d3025eb619ebc2ebb4d6"
+      };
+
+      // Initialize Firebase apps
+      const app3 = initializeApp(firebaseConfig3, "app3");
+      const app2 = initializeApp(firebaseConfig2, "app2");
+
+      const db3 = getDatabase(app3); // history DB
+      const db2 = getDatabase(app2); // entry-gate DB
 
       window.onload = () => {
           document.querySelectorAll('.pin-inputs input')[0].focus();
@@ -85,26 +99,53 @@
 
         document.getElementById('continueBtn').addEventListener('click', async () => {
           try {
-            const vehicleLogsRef = ref(db, "vehicleLogs");
+            const vehicleLogsRef = ref(db3, "vehicleLogs");
             const lastRecordQuery = query(vehicleLogsRef, limitToLast(1));
             const snapshot = await get(lastRecordQuery);
 
             if (snapshot.exists()) {
-              snapshot.forEach(child => {
-                const recordKey = child.key;
+              let recordKey = null;
+              let vehicleNo = null;
 
-                // ✅ Update paymentComplete = true
-                update(ref(db, "vehicleLogs/" + recordKey), {
-                  paymentComplete: true
-                }).then(() => {
-                  console.log("Payment updated ✅");
-                  // ✅ Redirect to GitHub Pages
-                  window.location.href = "https://santhoshbhavanpc.github.io/payment3/";
-                }).catch(err => {
-                  console.error("Update failed:", err);
-                  alert("Update failed!");
-                });
+              snapshot.forEach(child => {
+                recordKey = child.key;
+                vehicleNo = child.val().vehicleNo;
               });
+
+              // ✅ Update paymentComplete in history DB
+              await update(ref(db3, "vehicleLogs/" + recordKey), {
+                paymentComplete: true
+              });
+
+              // ✅ Update payment_status in entry-gate DB
+              const slotsSnap = await get(ref(db2, "slots"));
+              if (slotsSnap.exists()) {
+                let matches = [];
+
+                slotsSnap.forEach(slotSnap => {
+                  const slotName = slotSnap.key;
+                  slotSnap.forEach(child => {
+                    if (child.val().vehicleNo === vehicleNo) {
+                      matches.push({
+                        slot: slotName,
+                        key: child.key
+                      });
+                    }
+                  });
+                });
+
+                if (matches.length > 0) {
+                  matches.sort((a, b) => a.key.localeCompare(b.key));
+                  const oldest = matches[0];
+
+                  await update(ref(db2, "slots/" + oldest.slot + "/" + oldest.key), {
+                    payment_status: "Paid"
+                  });
+                }
+              }
+
+              console.log("Payment updated ✅");
+              window.location.href = "https://santhoshbhavanpc.github.io/payment3/";
             } else {
               alert("No record found!");
             }
@@ -122,12 +163,12 @@
 <p style="text-align:center; font-weight:bold; font-size:18px;">Enter the 6-digit UPI PIN</p>
 
 <div class="pin-inputs">
-    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="pin1">
-    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="pin2">
-    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="pin3">
-    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="pin4">
-    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="pin5">
-    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="pin6">
+    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*">
+    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*">
+    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*">
+    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*">
+    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*">
+    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*">
 </div>
 
 <button id="continueBtn">Continue</button>
